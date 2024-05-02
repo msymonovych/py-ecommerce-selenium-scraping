@@ -24,15 +24,25 @@ PAGES_URLS = {
 }
 
 
+def get_options() -> Options:
+    options = Options()
+    options.add_argument("--headless=new")
+    return options
+
+
 def accept_cookies(driver: WebDriver) -> None:
     driver.find_element(By.CLASS_NAME, "acceptCookies").click()
 
 
 def load_more_elements_for_page(driver: WebDriver) -> str:
-    more_link = driver.find_element(By.CLASS_NAME, "ecomerce-items-scroll-more")
+    more_link = driver.find_element(
+        By.CLASS_NAME, "ecomerce-items-scroll-more"
+    )
 
     while more_link.is_displayed():
-        ActionChains(driver).move_to_element(more_link).click(more_link).perform()
+        ActionChains(
+            driver
+        ).move_to_element(more_link).click(more_link).perform()
         time.sleep(1)
 
     return driver.page_source
@@ -50,31 +60,23 @@ def get_single_product(product: BeautifulSoup) -> Product:
     )
 
 
-def get_options():
-    options = Options()
-    options.add_argument("--headless=new")
-    return options
-
-
-def load_full_page(link_) -> BeautifulSoup:
-    driver = webdriver.Chrome(options=get_options())
+def load_full_page(link_: str, driver: WebDriver) -> BeautifulSoup:
     driver.get(link_)
     accept_cookies(driver)
     soup = BeautifulSoup(
         load_more_elements_for_page(driver),
         "html.parser"
     )
-    driver.close()
     return soup
 
 
-def get_single_page_products(page_name: str) -> None:
+def get_single_page_products(page_name: str, driver: WebDriver) -> None:
     link_ = urljoin(BASE_URL, PAGES_URLS[page_name])
     page = requests.get(link_).content
     soup = BeautifulSoup(page, "html.parser")
 
     if soup.select_one(".ecomerce-items-more"):
-        soup = load_full_page(link_)
+        soup = load_full_page(link_, driver)
 
     products = soup.select(".thumbnail")
 
@@ -87,7 +89,8 @@ def get_single_page_products(page_name: str) -> None:
 def get_all_products() -> None:
 
     for page in PAGES_URLS:
-        get_single_page_products(page)
+        with webdriver.Chrome(options=get_options()) as driver:
+            get_single_page_products(page, driver)
 
 
 if __name__ == "__main__":
