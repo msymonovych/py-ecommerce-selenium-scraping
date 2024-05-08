@@ -87,9 +87,8 @@ def get_single_page_products(page_name: str, driver: WebDriver) -> None:
 
 
 def get_all_products() -> None:
-
-    for page in PAGES_URLS:
-        with webdriver.Chrome(options=get_options()) as driver:
+    with webdriver.Chrome(options=get_options()) as driver:
+        for page in PAGES_URLS:
             get_single_page_products(page, driver)
 
 
